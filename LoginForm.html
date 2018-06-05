@@ -1,0 +1,43 @@
+<html>
+    <style>
+    body{
+        background-color:beige
+        
+    }
+    fieldset{
+        background-color:steelblue;
+        align-content: flex-start  
+        }
+    div{
+        color: white
+    }
+    </style>
+   <body>
+      <h2 style = "text-align: center;color: rgb(22, 22, 22);background:yellow">Sign In</h2>
+      <form action = "http://localhost:5000/SignIn" method = 'post'>
+         <fieldset>
+            {{ form.hidden_tag() }}
+            
+            <div style = font-size:20px; font-weight:bold; margin-left:150px>
+                {{ form.Firstname.label }}<br>
+                {{ form.Firstname}}
+                <ul>
+                        {% for error in form.Firstname.errors %}
+                            <li style="color: red;">{{ error }}</li>
+                        {% endfor %}
+                        </ul>
+                {{ form.password.label }}<br>
+                {{ form.password }}
+                <ul>
+                        {% for error in form.password.errors %}
+                            <li style="color: red;">{{ error }}</li>
+                        {% endfor %}
+                        </ul>  
+               <br>
+               <input type="submit" value="SignIn">
+            </div>
+         </fieldset>
+      </form>
+      
+   </body>
+</html>

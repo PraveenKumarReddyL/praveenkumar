@@ -1,104 +1,166 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+from flask import Flask, render_template, request,jsonify,json,url_for,redirect,abort
+from forms import ContactForm,LoginForm,SearchForm,UpdateForm,DetailsForm,DeleteForm
+import os
+import pandas as pd
+app = Flask(__name__)
+app.config['SECRET_KEY']='13381aff9ceea1d02dbf8995d5c539a3'
+@app.route('/contact', methods = ['GET', 'POST'])
+def contact():
+   form = ContactForm()
+   if request.method == 'POST':
+      if form.validate() == False:
+         return render_template('contact.html', form = form)
+      else:
+            d={}
+            value1=request.form['name']
+            value2=request.form['place']
+            value3=request.form['email']
+            value4=request.form['mobileno']
+            value5=request.form['bloodgroup']
+            value6=request.form['password']
+            d['Name']=value1.title()
+            d['Place']=value2.title()
+            d['Email']=value3
+            d['Mobileno']=value4
+            d['BloodGroup']=value5.title()
+            d['Password']=value6
+            data=json.dumps(d,indent=4,sort_keys=True)
+            with open('json_file.json', 'a') as f1:
+                if os.stat("json_file.json").st_size==0:
+                    f1.write("[")
+                    f1.write("\n")
+                    f1.write("\t")
+                    f1.write(data)
+                    f1.write("]")
+                else:
+                    with open('json_file.json','rb+') as f1:
+                        f1.seek(-1,os.SEEK_END)
+                        f1.truncate()
+                    with open('json_file.json','a') as f1:
+                        f1.write("\n")
+                        f1.write("\t")
+                        f1.write(",")
+                        f1.write(data)
+                        f1.write("]")
+            return redirect(url_for('bloodsearch'))
+   elif request.method == 'GET':
+         return render_template('contact.html', form = form)
+@app.route('/bloodsearch', methods = ['GET', 'POST'])
+def bloodsearch():
+    form = SearchForm()
+    if request.method == 'POST':
+      if form.validate() == False:
+         return render_template('LoginForm.html', form = form)
+      else:
+           group= request.form['search']
+           location=request.form['place']
+           with open("json_file.json","r") as f:
+                data = f.read()
+                #converting the form first character to capital letter
+                value3=str(group)
+                value4=str(location)
+                value1=value3.capitalize()
+                value2=value4.capitalize()
+           d = json.loads(data)
+           i = [i for i in d if i['BloodGroup'] ==value1 and i['Place']==value2]
+           return jsonify({'Donor_details': i})
+    elif request.method == 'GET':
+         return render_template('LoginForm.html', form = form)
+@app.route('/SignIn', methods = ['GET', 'POST'])
+def SignIn():
+    form =LoginForm()
+    if request.method == 'POST':
+        if form.validate() == False:
+            return render_template('SignIn.html', form = form)
+        else:
+            email_value=request.form['email']
+            password_value=request.form['password']
+            with open("json_file.json","r") as f:
+                    data = f.read() 
+                    value1=str(email_value)
+                    value2=str(password_value)
+                    d = json.loads(data)
+                    for i in d :
+                       if i['Email'] ==value1 and i['Password']==value2:
+                         return redirect(url_for('success'))
+                    
+                       else:
+                           continue
+            return redirect (url_for('failure'))
+    elif request.method == 'GET':
+         return render_template('SignIn.html', form = form)
+@app.route('/failure', methods = ['GET', 'POST'])
+def failure(): 
+    return render_template('failure.html')
 
-# C extensions
-*.so
+@app.route('/success', methods = ['GET', 'POST'])
+def success(): 
+        return render_template('success.html')
+@app.route('/update', methods = ['GET','POST'])
+def update():  
+    form =UpdateForm()
+    if request.method == 'POST':
+        if form.validate() == False:
+            return render_template('update.html', form = form)
+        else:
+            value1=request.form['name']
+            value2=request.form['place']
+            value3=request.form['email']
+            value4=request.form['mobileno']
+            value5=request.form['bloodgroup']
+            value6=request.form['password']
+            with open("json_file.json","r") as f:
+                    data = f.read() 
+                    d = json.loads(data)
+                    info1=str(value3)
+                    info2=str(value6)
+                    i = [i for i in d if i['Email'] == info1 and i['Password']==info2]
+                    i[0]['Name']=value1.capitalize()
+                    i[0]['Place']=value2.capitalize()
+                    i[0]['Email']=value3
+                    i[0]['Mobileno']=value4  
+                    i[0]['BloodGroup']=value5.capitalize()                                 
+                    info=json.dumps(d,indent=4,sort_keys=True)
+                    with open("json_file.json",'w') as file1:
+                        file1.write(info)  
+                    return "successfully updated" 
+    elif request.method == 'GET':
+            return render_template('update.html', form = form)
+@app.route('/details', methods = ['POST','GET'])
+def details():  
+    form =DetailsForm()
+    if request.method == 'POST':
+        if form.validate() == False:
+             return render_template('details.html', form = form)
+        else:
+             value1=request.form['password']
+             with open("json_file.json","r") as f:
+                    data = f.read() 
+                    d = json.loads(data)
+                    value=str(value1)
+                    i = [i for i in d if i.get("Password") == value]
+                    return jsonify({'person_details': i[0]})
+    elif request.method == 'GET':
+            return render_template('details.html', form = form)
+@app.route('/delete', methods = ['POST','GET'])
+def delete():              
+    form =DeleteForm()
+    if request.method == 'POST':
+        if form.validate() == False:
+             return render_template('delete.html', form = form)
+        else:
+            value1=request.form['password']
+            with open("json_file.json","r") as f:
+                    data = f.read() 
+                    d = json.loads(data)
+                    value=str(value1)
+                    i = [i for i in d if i.get("Password") == value]
+                    d.remove(i[0])#removes specific record 
+                    with open("json_file.json",'w') as file1:
+                        json.dump(d,file1,indent=4,sort_keys=True)
+                    return jsonify({'successfully deleted'})
+    elif request.method == 'GET':
+            return render_template('delete.html', form = form)
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
+if __name__ == '__main__':
+   app.run(debug = True) 

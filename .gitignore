@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request,jsonify,json,url_for,redirect,abort
 from forms import ContactForm,LoginForm,SearchForm,UpdateForm,DetailsForm,DeleteForm
 import os
-import pandas as pd
 app = Flask(__name__)
 app.config['SECRET_KEY']='13381aff9ceea1d02dbf8995d5c539a3'
 @app.route('/contact', methods = ['GET', 'POST'])
